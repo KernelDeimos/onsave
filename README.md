@@ -1,5 +1,11 @@
 # OnSave
 
+## Installation
+
+```sh
+go install github.com/KernelDeimos/onsave@latest
+```
+
 ## What is this?
 This is a small utility to define tasks to perform when files are modified
 without needing to use a specific text editor.
