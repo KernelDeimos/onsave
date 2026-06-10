@@ -4,6 +4,7 @@ package main
 //go:generate gofmt -w bindings.go
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -15,10 +16,49 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const helpText = `Usage: onsave [options] [subcommand]
+
+Subcommands:
+  gotmpl <template> <data> <output>  Render a Go template with YAML data
+  help                               Show this help message
+
+Options:
+  -d        Enable debug logging
+  --help    Show this help message
+
+Without a subcommand, onsave watches for file changes and runs rules
+defined in onsave.yaml in the current directory.
+`
+
 func main() {
-	args := os.Args[:1]
+	args := os.Args[1:]
+
+	// Handle help flags before anything else
+	if len(args) > 0 && (args[0] == "help" || args[0] == "--help") {
+		fmt.Print(helpText)
+		return
+	}
+
+	// Strip -d debug flag if present
 	if len(args) > 0 && args[0] == "-d" {
 		logrus.SetLevel(logrus.DebugLevel)
+		args = args[1:]
+	}
+
+	// Dispatch subcommands
+	if len(args) > 0 {
+		switch args[0] {
+		case "gotmpl":
+			if len(args) < 4 {
+				fmt.Fprintln(os.Stderr, "Usage: onsave gotmpl <template> <data> <output>")
+				os.Exit(1)
+			}
+			err := GoTmpl(args[1], args[2], args[3])
+			if err != nil {
+				logrus.Fatal(err)
+			}
+			return
+		}
 	}
 
 	w, err := watcher.NewDefault()
